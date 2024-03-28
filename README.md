@@ -1,60 +1,38 @@
-#include <WiFi.h>
-#include "DHTesp.h"
-#include "ThingSpeak.h"
-#include <random>
+This code is an Arduino sketch written in C++ to read temperature and humidity data from a DHT22 sensor and send it, along with a simulated CO2 value, to a ThingSpeak channel via WiFi. Here's a breakdown of the code:
 
-const int DHT_PIN = 15; // DHT22 sensor GPIO Pin
-const char* WIFI_NAME = "Wokwi-GUEST"; // WiFi SSID
-const char* WIFI_PASSWORD = ""; // WiFI Password
-const int myChannelNumber = 2488687; // ThingSpeak channel number
-const char* myApiKey = "NU61EVNLO9IHDDLK"; // ThingSpeak API key
-const char* server = "api.thingspeak.com"; // ThingSpeak server address
+1. **Header Includes:**
+   - `#include <WiFi.h>`: Includes the WiFi library for ESP32.
+   - `"DHTesp.h"`: Includes the library for DHT sensors (DHT22 in this case).
+   - `"ThingSpeak.h"`: Includes the ThingSpeak library for sending data to ThingSpeak IoT platform.
+   - `<random>`: Includes the standard C++ library for generating random numbers.
 
-DHTesp dhtSensor;
-WiFiClient client;
+2. **Global Constants:**
+   - `DHT_PIN`: Defines the GPIO pin to which the DHT22 sensor is connected.
+   - `WIFI_NAME` and `WIFI_PASSWORD`: Define the SSID and password of the WiFi network.
+   - `myChannelNumber` and `myApiKey`: Define the ThingSpeak channel number and API key.
+   - `server`: Defines the ThingSpeak server address.
 
-// Function to generate simulated CO2 values within the specified range
-int generateCO2Value() {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> dis(300, 2000);
-    return dis(gen);
-}
+3. **Objects and Variables:**
+   - `DHTesp dhtSensor`: Instantiates a DHTesp object for interacting with the DHT22 sensor.
+   - `WiFiClient client`: Instantiates a WiFiClient object for handling WiFi connection.
+   - `TempAndHumidity data`: Stores temperature and humidity data obtained from the DHT22 sensor.
+   - `int co2Value`: Stores the simulated CO2 value.
 
-void setup() {
-    Serial.begin(115200);
-    dhtSensor.setup(DHT_PIN, DHTesp::DHT22);
-    WiFi.begin(WIFI_NAME, WIFI_PASSWORD);
-    while (WiFi.status() != WL_CONNECTED){
-        delay(1000);
-        Serial.println("Wifi not connected");
-    }
-    Serial.println("Wifi connected !");
-    Serial.println("Local IP: " + String(WiFi.localIP()));
-    WiFi.mode(WIFI_STA);
-    ThingSpeak.begin(client);
-}
+4. **Function `generateCO2Value()`:**
+   - Generates a simulated CO2 value within the specified range (300 to 2000 ppm) using C++ `<random>` library.
 
-void loop() {
-    TempAndHumidity data = dhtSensor.getTempAndHumidity();
-    int co2Value = generateCO2Value(); // Generate CO2 value
+5. **Function `setup()`:**
+   - Initializes serial communication.
+   - Configures the DHT22 sensor.
+   - Connects to the WiFi network.
+   - Initializes the ThingSpeak library.
+   
+6. **Function `loop()`:**
+   - Reads temperature and humidity data from the DHT22 sensor.
+   - Generates a simulated CO2 value.
+   - Sets the fields of the ThingSpeak channel with temperature, humidity, and CO2 values.
+   - Writes the data to the ThingSpeak channel.
+   - Prints the data and the status of the data push operation to the serial monitor.
+   - Delays for 10 seconds before the next iteration.
 
-    ThingSpeak.setField(1, data.temperature);
-    ThingSpeak.setField(2, data.humidity);
-    ThingSpeak.setField(3, co2Value); // Set CO2 value in field 3
-
-    int status = ThingSpeak.writeFields(myChannelNumber, myApiKey);
-  
-    Serial.println("Temp: " + String(data.temperature, 2) + "°C");
-    Serial.println("Humidity: " + String(data.humidity, 1) + "%");
-    Serial.println("CO2: " + String(co2Value) + " ppm");
-  
-    if(status == 200){
-        Serial.println("Data pushed successfully");
-    } else {
-        Serial.println("Push error" + String(status));
-    }
-    Serial.println("---");
-
-    delay(10000);
-}
+Overall, this code continuously reads sensor data, generates simulated CO2 values, and sends this data to a ThingSpeak channel over WiFi, allowing for remote monitoring of environmental conditions.
