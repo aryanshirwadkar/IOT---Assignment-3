@@ -1,5 +1,3 @@
-# IOT---Assignment-3
-
 #include <WiFi.h>
 #include "DHTesp.h"
 #include "ThingSpeak.h"
